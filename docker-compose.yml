@@ -1,0 +1,53 @@
+redis:
+    container_name: redis
+    image: redis:3.0.7
+    ports:
+        - 6379:6379
+
+mysql:
+    container_name: mysql
+    image: mariadb:10.1.21
+    ports:
+        - 3306:3306
+    volumes:
+        - ~/.docker-php/mysql-data:/var/lib/mysql
+    restart: always
+    environment:
+        MYSQL_ROOT_PASSWORD: root
+
+nginx:
+    container_name: nginx
+    image: nginx:1.11.10
+    ports:
+        - 80:80
+        - 443:443
+    restart: always
+    volumes:
+        - ~/.docker-php/nginx-config/conf.d:/etc/nginx/conf.d
+        - ~/Projects:/code
+    links:
+        - php
+
+php:
+    container_name: php
+    build: php-build
+    expose:
+        - 9000
+    restart: always
+    volumes:
+        - ~/.docker-php/php-config/php.ini:/usr/local/etc/php/conf.d/custom.ini
+        - ~/Projects:/code
+    links:
+        - mysql
+        - redis
+
+phpmyadmin:
+    container_name: phpmyadmin
+    image: phpmyadmin/phpmyadmin:4.6.6-2
+    restart: always
+    links:
+        - mysql
+    ports:
+        - 8080:80
+    environment:
+        PMA_HOST: mysql
